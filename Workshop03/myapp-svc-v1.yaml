@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-svc-v1
+  labels:
+    name: myapp-svc-v1
+    version: v1
+spec:
+  type: ClusterIP
+  selector:
+    app: nwappv1
+    version: v1
+  ports:
+  - name: myappsvcv1-http
+    port: 80
+    targetPort: nwappv1-http
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nwapp-deploy-v1
+  labels:
+    name: nwapp-deploy-v1
+    version: v1
+    app: nwappv1
+spec:
+  selector:
+    matchLabels:
+      name: nwappv1
+      version: v1
+      app: nwappv1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      name: nwappv1
+      labels:
+        name: nwappv1
+        version: v1
+        app: nwappv1
+    spec:
+      containers:
+      - name: nwappv1-container
+        image: stackupiss/northwind-app:v1
+        imagePullPolicy: Always
+        env:
+        - name: INSTANCE_IP_ADDRESS
+          valueFrom:
+            fieldRef: 
+              fieldPath: status.podIP
+        - name: DB_USER
+          value: root
+        - name: DB_HOST
+          value: mydb-svc
+        - name: DB_PORT
+          value: mydbsvc-port
+        - name: DB_PASSWORD
+          value: changeit
+        ports:
+        - name: nwappv1-http
+          containerPort: 3000
