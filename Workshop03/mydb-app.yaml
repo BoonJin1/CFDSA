@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: myns
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nwdb-deploy
+  labels:
+    name: nwdb-deploy
+    version: "v1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nwdb
+  template:
+    metadata:
+      name: nwdb
+      labels:
+        app: nwdb
+    spec:
+      volumes:
+      - name: nwdb-vol
+        persistentVolumeClaim:
+          claimName: nwdb-pvc
+      initContainers:
+      - name: scrub-container
+        image: busybox
+        command: ["/bin/sh", "-c", "test -e /scrub && rm -rf /scrub/..?* /scrub/.[!.]* /scrub/*  && test -z \"$(ls -A /scrub)\" || exit 1"]
+        volumeMounts:
+        - mountPath: /scrub
+          name: nwdb-vol
+      containers:
+      - name: nwdb
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: nwdb-vol
+        image: stackupiss/northwind-db:v1
+        imagePullPolicy: Always
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "changeit"
+        - name: MYSQL_DATABASE
+          value: "northwind"
+        ports:
+        - name: nwdb-port
+          containerPort: 3306
