@@ -1,0 +1,49 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: weather-gw
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "weatherapp.157.230.193.69.nip.io"
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: weather-vs
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - weather-gw
+  http:
+  - match:
+    - uri:
+        exact: /
+    route:
+    - destination:
+        host: weather-svc.default.svc.cluster.local
+    rewrite:
+      uri: /
+  - match:
+    - uri:
+        exact: /weather
+    route:
+    - destination:
+        host: weather-svc.default.svc.cluster.local
+    rewrite:
+      uri: /
+  - match:
+    - uri:
+        prefix: /weather/
+    route:
+    - destination:
+        host: weather-svc.default.svc.cluster.local

@@ -1,0 +1,4 @@
+1. istioctl kube-inject -f weather-deploy.yaml > weather-deploy-w-sc.yaml
+2. kubectl apply -f weather-deploy-w-sc.yaml
+3. kubectl apply -f weather-svc.yaml
+4. kubectl apply -f weather-gw-vs.yaml
